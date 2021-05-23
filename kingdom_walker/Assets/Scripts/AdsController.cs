@@ -6,8 +6,8 @@ using UnityEngine.Advertisements;
 
 public class AdsController : MonoBehaviour
 {
-    string gameId = "3556843";
-    bool testMode = true;
+    //string gameId = "3556843";
+    //bool testMode = true;
 
     // Start is called before the first frame update
     void Start()

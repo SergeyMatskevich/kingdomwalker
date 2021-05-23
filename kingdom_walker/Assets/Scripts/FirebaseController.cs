@@ -7,10 +7,10 @@ using UnityEngine;
 
 public class FirebaseController : MonoBehaviour
 {
-    private string DATA_URL = "https://kingdomx-efa6a.firebaseio.com/";
+    //private string DATA_URL = "https://kingdomx-efa6a.firebaseio.com/";
 
     //public DatabaseReference db;
-    private string stat = "statistics";
+    //private string stat = "statistics";
 
     // Start is called before the first frame update
     void Start()
