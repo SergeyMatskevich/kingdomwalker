@@ -41,3 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Tile
+    uniqueID: 3089714235
+    locked: 0
+  - name: Card
+    uniqueID: 1669597127
+    locked: 0
+  - name: Avatar
+    uniqueID: 1321734347
+    locked: 0
+  - name: Action
+    uniqueID: 3001089837
+    locked: 0
