@@ -5,35 +5,52 @@ using UnityEngine;
 public class CardModel
 {
     public string name;
-    public bool onTable;
+    public bool canPlay;
     public CardAction action;
-    public ConditionType conditionForAction;
+    public ConditionType conditionForActionByEnemy;
+    public ConditionType conditionForActionByPlayer;
+    public int coolDown;
+    public int coolDownLeft;
 
-    public CardModel(string Name, CardAction Action, ConditionType ConditionForAction)
+    public CardModel(string Name, CardAction Action, ConditionType ByEnemy = ConditionType.Any, int CoolDown = 0, ConditionType ByPlayer = ConditionType.Any )
     {
         name = Name;
         action = Action;
-        conditionForAction = ConditionForAction;
+        conditionForActionByEnemy = ByEnemy;
+        conditionForActionByPlayer = ByPlayer;
+        coolDown = CoolDown;
+    }
+
+    public bool CardFromPlayerDeck(PlayerModel player)
+    {
+        foreach (CardModel card in player.deck)
+        {
+            if (card == this)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool CheckCondition(PlayerModel owner, PlayerModel enemy)
     {
-        if (conditionForAction == ConditionType.EnemyOnTileTypeWater)
+        if (conditionForActionByEnemy == ConditionType.EnemyOnTileTypeWater)
         {
             return enemy.avatar.position.tileType == TileType.Water;
         }
 
-        if (conditionForAction == ConditionType.EnemyOnTileTypePlains)
+        if (conditionForActionByEnemy == ConditionType.EnemyOnTileTypePlains)
         {
             return enemy.avatar.position.tileType == TileType.Plain;
         }
 
-        if (conditionForAction == ConditionType.EnemyOnTileTypeForest)
+        if (conditionForActionByEnemy == ConditionType.EnemyOnTileTypeForest)
         {
             return enemy.avatar.position.tileType == TileType.Forest;
         }
 
-        else if (conditionForAction == ConditionType.Any)
+        else if (conditionForActionByEnemy == ConditionType.Any)
         {
             return true;
         }

@@ -4,106 +4,102 @@ using UnityEngine;
 
 public class MapModel
 {
-    public int rows;
-    public int columns;
-    public int forestCnt;
-    public int waterCnt;
-    public int plainsCnt;
-    public List<TileModel> tiles;
+    public int _rows;
+    public int _columns;
+    public int _forestCnt;
+    public int _waterCnt;
+    public int _plainsCnt;
+    public int _rTx = 5;
+    public int _rTy = 4;
+    public int _bTx = 0;
+    public int _bTy = 0;
+    public readonly List<TileModel> _tiles;
 
-    public MapModel(int lvl)
+    public MapModel(int Rows = 5, int Columns = 6, int ForestCount = 0, int WaterCount = 0, int PlainsCount = 28, int RTX = 0, 
+        int RTY = 0, int BTX = 5, int BTY = 4)
     {
-        switch (lvl)
+        _rows = Rows;
+        _columns = Columns;
+        _forestCnt = ForestCount;
+        _waterCnt = WaterCount;
+        _plainsCnt = PlainsCount;
+        _rTx = RTX;
+        _rTy = RTY;
+        _bTx = BTX;
+        _bTy = BTY;
+        _tiles = new List<TileModel>();
+
+        FillTilesInModel();
+        SetPlains();
+        SetTowers();
+        SetTilesForType( TileType.Forest, _forestCnt);
+        SetTilesForType( TileType.Water, _waterCnt);
+        
+    }
+
+    public void ClearTilesForMove()
+    {
+        foreach (TileModel tile in _tiles)
         {
-            case 1: //movement plain
-                rows = 5;
-                columns = 6;
-                forestCnt = 0;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 2: // movement forest
-                rows = 5;
-                columns = 6;
-                forestCnt = 28;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 3: // movement water
-                rows = 5;
-                columns = 6;
-                forestCnt = 0;
-                waterCnt = 28;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 4: // attack plain
-                rows = 5;
-                columns = 6;
-                forestCnt = 5;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 5: // attack forrest
-                rows = 5;
-                columns = 6;
-                forestCnt = 23;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 6: // attack water
-                rows = 5;
-                columns = 6;
-                forestCnt = 0;
-                waterCnt = 23;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 7: // plain
-                rows = 5;
-                columns = 6;
-                plainsCnt = Random.Range(4, 13);
-                forestCnt = Random.Range(4, 13);
-                waterCnt = 28 - forestCnt - plainsCnt;
-                tiles = new List<TileModel>();
-                break;
-            case 8: // plain heal
-                rows = 5;
-                columns = 6;
-                forestCnt = 5;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 9: // forest heal
-                rows = 5;
-                columns = 6;
-                forestCnt = 23;
-                waterCnt = 0;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 10: // water heal
-                rows = 5;
-                columns = 6;
-                forestCnt = 0;
-                waterCnt = 23;
-                plainsCnt = 28;
-                tiles = new List<TileModel>();
-                break;
-            case 11:
-                rows = 5;
-                columns = 6;
-                plainsCnt = Random.Range(4, 13);
-                forestCnt = Random.Range(4,13);
-                waterCnt = 28 - forestCnt - plainsCnt;
-                tiles = new List<TileModel>();
-                break;
+            tile.availableForMove = false;
+            tile.view.UpdateAnimation();
+        }
+        
+    }
+
+    public void FillTilesInModel()
+    {
+
+        for (int i = 0; i < _columns; ++i)
+        {
+            for (int j = 0; j < _rows; ++j)
+            {
+                
+                TileModel tile = new TileModel(i, j);
+                _tiles.Add(tile);
+            }
         }
     }
 
+    public void SetTowers()
+    {
+        foreach (TileModel tile in _tiles)
+        {
+            if (tile.x == _bTx && tile.y == _bTy)
+            {
+                tile.tileType = TileType.BlueTower;
+            }
+            else if (tile.x == _rTx && tile.y == _rTy)
+            {
+                tile.tileType = TileType.RedTower;
+            }
+        }
+    }
+
+    public void SetPlains()
+    {
+        foreach (TileModel tile in _tiles)
+        {
+            tile.tileType = TileType.Plain;
+        }
+    }
+
+    public void SetTilesForType(TileType type, int count)
+    {
+        for (int i = 0; i < count; ++i)
+        {
+            bool done = false;
+
+            while (!done)
+            {
+                int rand = UnityEngine.Random.Range(0, _tiles.Count);
+                
+                if (_tiles[rand].tileType == TileType.Plain)
+                {
+                    _tiles[rand].tileType = type;
+                    done = true;
+                }
+            }
+        }
+    }
 }

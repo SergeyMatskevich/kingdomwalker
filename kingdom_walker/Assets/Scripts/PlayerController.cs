@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,10 +12,13 @@ public class PlayerController : MonoBehaviour
 
     public GameObject floatingText;
 
+    public List<GameObject> avatars;
     public GameObject avatarPlayer;
     public GameObject avatarEnemy;
     public TextMesh hpPlayer;
     public TextMesh hpEnemy;
+
+    public RectTransform playersHolder;
 
     
     // Start is called before the first frame update
@@ -31,7 +35,25 @@ public class PlayerController : MonoBehaviour
 
     public void InitAvatars(GameModel game)
     {
-        PopulateAvatartsUI(avatarPrefab, game);
+        foreach (GameObject avatar in avatars)
+        {
+            Destroy(avatar);
+        }
+        
+        foreach (var player in game._players)
+        {
+            PopulatePlayerOnUI(player,avatarPrefab,playersHolder);
+        }
+        
+    }
+
+    public void PopulatePlayerOnUI(PlayerModel player, GameObject prefab, RectTransform holder)
+    {
+        GameObject instancePlayer = Instantiate(prefab, new Vector3(player.avatar.position.x, player.avatar.position.y, 0F), Quaternion.identity);
+        instancePlayer.transform.SetParent(holder);
+        instancePlayer.GetComponent<AvatarView>().model = player;
+        instancePlayer.transform.localScale = holder.transform.localScale;
+        avatars.Add(instancePlayer);
     }
 
     public void PopulateAvatartsUI(GameObject prefab, GameModel game)
@@ -40,57 +62,31 @@ public class PlayerController : MonoBehaviour
         RectTransform mapHolder = GameObject.Find("Map").GetComponent<RectTransform>();
         RectTransform playersHolder = new GameObject("Players", typeof(RectTransform)).GetComponent<RectTransform>();
 
-        game.player.avatar.position = GameController._gC._mC.GetTile(0, 0);
-        game.enemy.avatar.position = GameController._gC._mC.GetTile(5, 4);
+        // this might be moved to level setup
+        //game.player.avatar.position = GameController._gC._mC.GetTile(0, 0);
+        //game.enemy.avatar.position = GameController._gC._mC.GetTile(5, 4);
 
         GameObject instancePlayer = Instantiate(prefab, new Vector3(0F, 0F, 0F), Quaternion.identity);
         instancePlayer.transform.SetParent(playersHolder);
         avatarPlayer = instancePlayer;
-        instancePlayer.GetComponent<AvatarView>().model = game.player.avatar;
-
-        hpPlayer.text = game.player.avatar.currentHP.ToString() + " / " + game.player.avatar.maxHP.ToString();
+        //instancePlayer.GetComponent<AvatarView>().model = game.player.avatar;
+        //hpPlayer.text = game.player.avatar.currentHP.ToString() + " / " + game.player.avatar.maxHP.ToString();
         
-
         GameObject instanceEnemy = Instantiate(prefab, new Vector3(5F, 4F, 0F), Quaternion.identity);
         instanceEnemy.transform.SetParent(playersHolder);
         avatarEnemy = instanceEnemy;
-        instanceEnemy.GetComponent<AvatarView>().model = game.enemy.avatar;
-
-        hpEnemy.text = game.enemy.avatar.currentHP.ToString() + " / " + game.enemy.avatar.maxHP.ToString();
-
-
+        //instanceEnemy.GetComponent<AvatarView>().model = game.enemy.avatar;
+        //hpEnemy.text = game.enemy.avatar.currentHP.ToString() + " / " + game.enemy.avatar.maxHP.ToString();
+        
         GameObject.Find("Players").transform.SetParent(mapHolder);
         GameObject.Find("Players").transform.localPosition = new Vector3(0F, 0F, 0F);
         GameObject.Find("Players").transform.localScale = new Vector3(1F, 1F, 1F);
         
     }
 
-    public void AvatarMove(PlayerModel player, TileModel tile)
-    {
-        Vector3 end = GameController._gC._mC.GetTileUI(tile).transform.position;
+    
 
-        if (player.isPlayer)
-        {
-            avatarPlayer.GetComponent<DoTweenController>().MoveToPosition(end);
-            //avatarPlayer.GetComponent<AvatarView>().MoveToTile(end);
-            player.avatar.previousPosition = player.avatar.position;
-            player.avatar.position = tile;
-        }
-        else
-        {
-            avatarEnemy.GetComponent<DoTweenController>().MoveToPosition(end);
-            //avatarEnemy.GetComponent<AvatarView>().MoveToTile(end);
-            player.avatar.previousPosition = player.avatar.position;
-            player.avatar.position = tile;
-        }
-    }
-
-    public void ResetAvatar(PlayerModel player)
-    {
-        player.avatar.moveType = MoveType.SingleMove;
-        //player.activeCard.onTable = false;
-        //player.activeCard = null;
-    }
+    
 
     public void InstantiateHeal(PlayerModel player)
     {

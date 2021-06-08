@@ -47,12 +47,7 @@ public class UIController : MonoBehaviour
         GameController._gC.InitLevel();
     }
 
-    public void StartNewLevel()
-    {
-        GameController._gC._aC.ShowInterstitial();
-        GameController._gC.level += 1;
-        GameController._gC.InitLevel();
-    }
+    
 
     // Start is called before the first frame update
     void Start()

@@ -10,112 +10,16 @@ public class AvatarModel
     public TileModel previousPosition;
     public int movement;
     public MoveType moveType;
-    public List<TileModel> availableTilesForMove;
 
-    public AvatarModel(int lvl)
+    public AvatarModel(TileModel startTile, int HP = 10)
     {
-        switch(lvl)
-        {
-            case 1:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 2:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 3:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 4:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 5:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 6:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 7:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 8:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 9:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 10:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-            case 11:
-                maxHP = 10;
-                currentHP = 10;
-                position = null;
-                previousPosition = null;
-                movement = 1;
-                moveType = MoveType.SingleMove;
-                availableTilesForMove = new List<TileModel>();
-                break;
-        }
+        maxHP = HP;
+        currentHP = HP;
+        position = startTile;
+        previousPosition = null;
+        movement = 1;
+        moveType = MoveType.SingleMove;
+
     }
 
     public void PlusHitpoints(int heal)
@@ -135,4 +39,51 @@ public class AvatarModel
     {
         currentHP -= damage;
     }
+    
+    public void SetAvatarMoves(List<PlayerModel> players, List<TileModel> tiles )
+    {
+        foreach (TileModel tile in tiles)
+        {
+            if (ApplyMoveType(tile) && !tile.IsOccupied(players))
+            {
+                tile.availableForMove = true;
+            }
+        }
+    }
+    
+    private bool ApplyMoveType(TileModel tile)
+    {
+        int absoluteDifference = Mathf.Abs(position.x - tile.x) +
+                                 Mathf.Abs(position.y - tile.y);
+
+        bool result = false;
+
+        switch (moveType)
+        {
+            case MoveType.SingleMove:
+
+                result = absoluteDifference == movement;
+                break;
+            case MoveType.RollingRoll:
+                result = absoluteDifference != 0 && absoluteDifference <= 2;
+                break;
+            case MoveType.HorseTrainer:
+                result = absoluteDifference != 0 && absoluteDifference <= 3 &&
+                         (Mathf.Abs(position.x - tile.x) == 2 && Mathf.Abs(position.y - tile.y) == 1
+                          || Mathf.Abs(position.x - tile.x) == 1 && Mathf.Abs(position.y - tile.y) == 2);
+                break;
+            case MoveType.CabCarl:
+                result = absoluteDifference != 0 && absoluteDifference <= 2
+                                                 && (tile.x == position.x || tile.y == position.y);
+                break;
+            case MoveType.Bishop:
+                result = absoluteDifference != 0 && absoluteDifference <= 4 &&
+                         (Mathf.Abs(position.x - tile.x) == 1 && Mathf.Abs(position.y - tile.y) == 1
+                          || Mathf.Abs(position.x - tile.x) == 2 && Mathf.Abs(position.y - tile.y) == 2);
+                break;
+        }
+
+        return result;
+    }
+    
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +11,12 @@ public class TileView : MonoBehaviour
 
     private void Start()
     {
-        
+        GameController._gC.OnTileAvailableForMove += UpdateAnimation;
+    }
+
+    private void OnDestroy()
+    {
+        GameController._gC.OnTileAvailableForMove -= UpdateAnimation;
     }
 
     public void SetSprites()
@@ -33,43 +39,31 @@ public class TileView : MonoBehaviour
                 GetComponent<SpriteRenderer>().sprite = sprites[4];
                 break;
         }
+
+        UpdateAnimation();
     }
 
     // Goal is to set here all the animations
     public void UpdateAnimation()
     {
-        animator.SetBool("AvailableForMove", model.availableForMove);
+        //Debug.Log(model.availableForMove);
+        animator.SetBool("AvailableForMove", model.availableForMove);   
     }
 
     public void OnMouseDown()
     {
         if (model.availableForMove)
         {
-            GameController._gC._mC.ClearTiles(GameController._gC._game.map);
-            GameController._gC._pC.AvatarMove(GameController._gC._game.player, model);
-            GameController._gC._pC.ResetAvatar(GameController._gC._game.player);
-            if (GameController._gC.turnNumber > 1)
-            {
-                Invoke("MoveCardOnUIBack", 1.2F);
-                Invoke("SetNextTurn", 2.4F);
-            }
-            else
-            {
-                Invoke("SetNextTurn", 1.2F);
-            }
-            
+            GameController._gC.ClearTiles();
+            GameController._gC._fieldC.AvatarMove(model);
+            GameController._gC.ResetAvatar();
+            GameController._gC.SetNextTurn();
+
         }
     }
 
     public void MoveCardOnUIBack()
     {
-        GameController._gC._cC.MoveCardOnUIBack(GameController._gC._game.player);
-    }
-
-    public void SetNextTurn()
-    {
-        GameController._gC.playerTurn = false;
-        //GameController.gC.turnNumber += 1;
-        GameController._gC.SetNextTurn();
+        //GameController._gC._cC.MoveCardOnUIBack(GameController._gC._game.player);
     }
 }

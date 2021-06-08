@@ -4,9 +4,9 @@ using UnityEngine;
 
 public enum ConditionType
 {
-    //	OwnerOnTileTypeForest,
+    OwnerOnTileTypeForest,
     OwnerOnTileTypeWater,
-    //	OwnerOnTileTypePlains,
+    OwnerOnTileTypePlains,
     EnemyOnTileTypeForest,
     EnemyOnTileTypeWater,
     EnemyOnTileTypePlains,
@@ -16,6 +16,5 @@ public enum ConditionType
     //	BothOnTileTypePrincess,
     //	OwnerNearToTileTypeMountain,
     EnemyNearToTileTypeMountain,
-    Any,
-    None
+    Any
 }

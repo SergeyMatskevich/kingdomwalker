@@ -5,6 +5,7 @@ using UnityEngine;
 public abstract class CardAction
 {
     public ActionType ActionType;
+    public MoveType moveType;
     public int damage;
     public int heal;
 

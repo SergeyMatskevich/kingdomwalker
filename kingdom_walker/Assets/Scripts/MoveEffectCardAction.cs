@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MoveEffectCardAction : CardAction
 {
-    public MoveType moveType;
+    //public MoveType moveType;
 
     public MoveEffectCardAction(MoveType moveType)
     {
