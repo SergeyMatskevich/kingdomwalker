@@ -12,12 +12,13 @@ public class AvatarView : MovingObject
 
     //public TextMeshProUGUI hp;
     public TextMeshPro hp;
-    
+
     protected override void Start()
     {
         base.Start();
 
         GameController._gC.OnAvatarChangeHP += UpdateHP;
+        GameController._gC.OnAvatarPositionChanged += MoveAvatar;
     }
 
     public void UpdatePlayerAnimation()
@@ -30,39 +31,25 @@ public class AvatarView : MovingObject
         hp.text = model.avatar.currentHP.ToString() + "/" + model.avatar.maxHP.ToString();
     }
 
-    public void MoveAvatar(Vector3 end, TileModel tile)
+    public void MoveAvatar(TileModel tile, PlayerModel player)
     {
-        GetComponent<SpriteRenderer>().flipX = true;
-        // false направо
-        // true налево
-        if (end.x > transform.position.x)
+        if (player == model)
         {
-            GetComponent<SpriteRenderer>().flipX = false;
-        }
-        else
-        {
+            Vector3 end = GameController._gC.GetTileUI(tile).transform.position;
+
             GetComponent<SpriteRenderer>().flipX = true;
-        }
+            // false направо
+            // true налево
+            if (end.x > transform.position.x)
+            {
+                GetComponent<SpriteRenderer>().flipX = false;
+            }
+            else
+            {
+                GetComponent<SpriteRenderer>().flipX = true;
+            }
         
-        GetComponent<Rigidbody2D>().DOMove(end, 1F, false);
-        model.avatar.previousPosition = model.avatar.position;
-        model.avatar.position = tile;
-    }
-
-    public void MoveToTile(Vector3 end)
-    {
-        GetComponent<SpriteRenderer>().flipX = true;
-        // false направо
-        // true налево
-        if (end.x > transform.position.x)
-        {
-            GetComponent<SpriteRenderer>().flipX = false;
+            GetComponent<Rigidbody2D>().DOMove(end, 1F, false).OnComplete(GameController._gC.CheckWinnerMove); 
         }
-        else
-        {
-            GetComponent<SpriteRenderer>().flipX = true;
-        }
-
-        Move(end);
     }
 }

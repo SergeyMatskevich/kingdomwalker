@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class GameController : MonoBehaviour
 {
@@ -10,7 +13,6 @@ public class GameController : MonoBehaviour
     public MapController _mC;
     public CardController _cC;
     public PlayerController _pC;
-    public UIController _UIC;
     public GameModel _game;
     public FirebaseController _fC;
     public AdsController _aC;
@@ -18,13 +20,20 @@ public class GameController : MonoBehaviour
     public RewardController _rC;
 
     public GameObject attackAnimation;
-    
+
     public int level;
     
     public UnityAction OnAvatarChangeHP;
     public UnityAction OnTileAvailableForMove;
     public UnityAction OnCardSelected;
-    public UnityAction OnCardDeselected;
+    public UnityAction<TileModel,PlayerModel> OnAvatarPositionChanged;
+    public UnityAction<CardModel> OnCardInCooldown;
+    public UnityAction<CardModel> OnCardConditionFalse;
+    public UnityAction<CardModel> OnCardOutCooldown;
+    public UnityAction OnResourceUpdate;
+    public UnityAction<CardModel> OnCardRefreshed;
+
+    public GamerModel gamer;
     
     private void Awake()
     {
@@ -42,13 +51,16 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        gamer = Load();
         InitLevel();
     }
     
     public void StartNewLevel()
     {
         //_aC.ShowInterstitial();
-        level += 1;
+        gamer.level += 1;
+        _game.RewardPlayer();
+        Save();
         InitLevel();
     }
     
@@ -56,7 +68,7 @@ public class GameController : MonoBehaviour
     {
         _rC.rewardPanel.SetActive(false);
         
-        _game = new GameModel(level);
+        _game = new GameModel(gamer.level);
         _fieldC.InitGameField(_game);
         
         string id = SystemInfo.deviceUniqueIdentifier;
@@ -74,7 +86,6 @@ public class GameController : MonoBehaviour
         _fC.SaveStatistics(id, time, level.ToString(), "gamequit", _game._turnNumber.ToString(), Time.time.ToString());
     }
     
-
     public void SetActiveAvatarMoves()
     {
         ClearTiles();
@@ -84,32 +95,87 @@ public class GameController : MonoBehaviour
         OnTileAvailableForMove?.Invoke();
     }
 
+    public void DefineRewardPanel()
+    {
+        if (_game.GetWinner().isPlayer == true)
+        {
+            _gEC.DestroyCurrentMessage();
+            _rC.SetupWinRewards();
+        }
+        else
+        {
+            _gEC.DestroyCurrentMessage();
+            _rC.SetupDefeatRewards();
+        }
+    }
+
+    public void CheckWinnerMove()
+    {
+        if (_game.GetWinner() == null)
+        {
+            SetNextTurn();
+        }
+        else
+        {
+            Debug.Log("GameOver");
+            DefineRewardPanel();
+        }
+    }
+
+    public void CheckWinnerCard()
+    {
+        if (_game.GetWinner() != null)
+        {
+            Debug.Log("GameOver");
+            DefineRewardPanel();
+        }
+    }
 
     public void SetNextTurn()
     {
+        _game._turnNumber += 1;
         
-        if (CheckGameStatus())
+        _game.DefineActivePlayer();
+        
+        Debug.Log("Turn number: " + _game._turnNumber);
+
+        if (_game.GetActivePlayer().isPlayer)
         {
-            _game._turnNumber += 1;
-            
-            //Debug.Log(_game.GetActivePlayer().isPlayer);
-            _game.DefineActivePlayer();
-            //Debug.Log(_game.GetActivePlayer().isPlayer);
-            
-            if (_game.GetActivePlayer().isPlayer)
-            {
-                _gEC.InstantiateMessage();
-                SetActiveAvatarMoves();
-            }
-            else
-            {
-                _game.GetActivePlayer().SelectRandomCard();
-                InvokeCard();
-                Invoke("InvokeEnemyMoveAnimation", 0.5F);
-                Invoke("SetNextTurn", 1F);
-                
-            }
+            _gEC.InstantiateMessage();
+            SetActiveAvatarMoves();
         }
+        else
+        {
+            Debug.Log("Enemy goes");
+            StartCoroutine(ComposeEnemyMove());
+        }
+        
+    }
+
+    IEnumerator ComposeEnemyMove()
+    {
+        Debug.Log("Active player is player" + _game.GetActivePlayer().isPlayer);
+        _game.SelectCardForAI();
+        if (_game.GetActivePlayer().activeCard != null)
+        {
+            OnCardSelected?.Invoke();
+
+            yield return new WaitForSeconds(1F);
+
+            InvokeCard();    
+        }
+        
+        SetActiveAvatarMoves();
+        
+        AvatarMove(_mC.SetTileForAI(_game._map, _game.GetActivePlayer()));
+        
+        //ResetAvatar();
+        
+        ClearTiles();
+        
+        // define whether to play card
+        // if so -> define what card to play
+        // compose sequence of actions : card invoke on ui -> select where to make move -> 
     }
 
     public GameObject GetAvatarByModel(PlayerModel model)
@@ -125,25 +191,60 @@ public class GameController : MonoBehaviour
         return null;
     }
 
+    public void UnfreezeCard(CardView view)
+    {
+        if (view.model.cooldownRemoveCost <= gamer.gems)
+        {
+            view.model.Unfreeze();
+            gamer.gems -= view.model.cooldownRemoveCost;
+            OnCardOutCooldown?.Invoke(view.model);
+            OnResourceUpdate?.Invoke();
+        }
+        else
+        {
+            Debug.Log("Not enough gems");
+        }
+
+        //check the player balance is enough
+        //update card cooldown
+        //refresh card back
+    }
+
+
     public void SelectCard(CardView view)
     {
         PlayerModel target = _game.OppositePlayer();
-
-        if (view.model.CardFromPlayerDeck(_game.GetActivePlayer()) && _game.GetActivePlayer().activeCard == null)
+        
+        if (view.model.CardFromPlayerDeck(_game.GetActivePlayer()) 
+            && _game.GetActivePlayer().activeCard == null 
+            && _game.GetActivePlayer().isPlayer == true)
         {
-            _game.GetActivePlayer().activeCard = view.model;
-            OnCardSelected?.Invoke();
             //TODO: refactor on card that should be made made unavailable;  
-            
-            if (view.model.CheckCondition(_game.GetActivePlayer(), target))
+
+            if (view.model.CardIsInCooldown() == false)
             {
-                Debug.Log("Condition checked");
-                view.model.action.Invoke(_game.GetActivePlayer(), target);
-                if (view.model.action.ActionType == ActionType.DealDamage)
+                if (view.model.CheckCondition(_game.GetActivePlayer(), target))
                 {
-                    Instantiate(attackAnimation, GetAvatarByModel(target).transform);
+                    Debug.Log("Condition checked");
+                    view.model.InvokeAction(_game.GetActivePlayer(), target);
+                    OnCardSelected?.Invoke();
+                    if (view.model.action.ActionType == ActionType.DealDamage)
+                    {
+                        Instantiate(attackAnimation, GetAvatarByModel(target).transform);
+                    }
+                }
+                else
+                {
+                    OnCardConditionFalse?.Invoke(view.model);
                 }
             }
+            else
+            {
+                Debug.Log("In cooldown");
+                OnCardInCooldown?.Invoke(view.model);
+            }
+
+            
         }
         else
         {
@@ -173,131 +274,87 @@ public class GameController : MonoBehaviour
         }
         //AnimateCardAction(player, enemy);
     }
-
-    public void InvokePlayerCardAnimation()
-    {
-        //_cC.InvokeCard(_game.player, _game.enemy);
-        //cC.AnimateCardAction(game.player, game.enemy);
-    }
-
-    public void InvokeEnemyCardAnimation()
-    {
-        //_cC.InvokeCard(_game.enemy, _game.player);
-        //cC.AnimateCardAction(game.enemy, game.player);
-    }
-
-    public void InvokePlayerMoveAnimation()
-    {
-        //_mC.SetPlayerMoves();
-    }
-
-    public void InvokeEnemyMoveAnimation()
-    {
-        SetActiveAvatarMoves();
-        
-        _fieldC.AvatarMove(_mC.SetTileForAI(_game._map, _game.GetActivePlayer()));
-        
-        ResetAvatar();
-        ClearTiles();
-    }
-
-    public void MoveCardOnUIBack()
-    {
-        //_cC.MoveCardOnUIBack(_game.enemy);
-    }
-
-    public PlayerModel GetPlayer(bool isPlayer)
-    {
-        foreach (PlayerModel player in _game._players)
-        {
-            if (player.isPlayer == isPlayer)
-            {
-                return player;
-            }
-        }
-        return null;
-    }
     
     public void ResetAvatar()
     {
-        _game.GetActivePlayer().avatar.moveType = MoveType.SingleMove;
-        //player.activeCard.onTable = false;
-        _game.GetActivePlayer().activeCard = null;
-        
-        OnCardDeselected?.Invoke();
+        //_game.GetActivePlayer().avatar.moveType = MoveType.SingleMove;
+        //_game.GetActivePlayer().RefreshDeck();
     }
-
-    // need to refactor it somehow
-    public bool CheckGameStatus()
+    
+    public void AvatarMove(TileModel tile)
     {
+        PlayerModel player = _game.GetActivePlayer(); 
         
-        if (_game._players.Count == 1)
-        {
-            if (_game.GetActivePlayer().avatar.position.tileType == TileType.RedTower)
-            {
-                Debug.Log("YOU WIN 1");
-                _gEC.DestroyCurrentMessage();
-                //_gEC.InstantiateWinMessage();
-                _rC.SetupWinRewards();
-                //_UIC.SetResultMessage("YOU WIN", "DON'T SHOW OFF");
-                //CloseLevel(true, level);
-                return false;
-            }
-        }
-        else
-        {
-            PlayerModel player = GetPlayer(true);
-            PlayerModel enemy = GetPlayer(false);
+        player.avatar.MoveAvatar(tile);
         
-            if (player.avatar.currentHP <= 0 && enemy.avatar.currentHP <= 0)
+        OnAvatarPositionChanged?.Invoke(tile,player);
+    }
+    
+    public GameObject GetTileUI(TileModel tile)
+    {
+        foreach (GameObject tileUI in _fieldC.tiles)
+        {
+            if (tileUI.GetComponent<TileView>().model == tile)
             {
-                Debug.Log("TIE");
-            
-                return false;
-            }
-            else if (player.avatar.currentHP <= 0 && enemy.avatar.currentHP > 0)
-            {
-                Debug.Log("ENEMY WON");
-                //_UIC.SetResultMessage("YOU LOSE, DEAL WITH IT", "HE'S TOUGH");
-                //CloseLevel(false, level);
-                return false;
-            }
-            else if (player.avatar.currentHP > 0 && enemy.avatar.currentHP <= 0)
-            {
-                Debug.Log("YOU WIN");
-                _gEC.DestroyCurrentMessage();
-                //_gEC.InstantiateWinMessage();
-                _rC.SetupWinRewards();
-                //_UIC.SetResultMessage("YOU WIN", "DON'T SHOW OFF");
-                //CloseLevel(true, level);
-                return false;
-            }
-            else if (player.avatar.position.tileType == TileType.RedTower &&
-                     enemy.avatar.position.tileType == TileType.BlueTower)
-            {
-                Debug.Log("TIE");
-                return false;
-            }
-            else if (enemy.avatar.position.tileType == TileType.BlueTower)
-            {
-                Debug.Log("ENEMY WON");
-                
-                return false;
-            }
-            else if (player.avatar.position.tileType == TileType.RedTower)
-            {
-                Debug.Log("YOU WIN");
-                _gEC.DestroyCurrentMessage();
-                //_gEC.InstantiateWinMessage();
-                _rC.SetupWinRewards();
-                return false;
-            }
-            else
-            {
-                return true;
+                return tileUI;
             }
         }
 
-        return true;
+        return null;
+    }
+    
+    public void Save()
+    {
+        if (File.Exists(Application.persistentDataPath + "/gamerData.dat"))
+        {
+            File.Delete(Application.persistentDataPath + "/gamerData.dat");
+        }
+
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file = File.Create(Application.persistentDataPath + "/gamerData.dat");
+
+        GamerData data = new GamerData
+        {
+            coinBalance = gamer.coins, 
+            gemBalance = gamer.gems,
+            level = gamer.level
+            
+        };
+
+        bf.Serialize(file, data);
+        Debug.Log("Player Data is saved");
+        file.Close();
+
+    }
+    
+    public GamerModel Load()
+    {
+        Debug.Log(Application.persistentDataPath);
+        if (File.Exists(Application.persistentDataPath + "/gamerData.dat"))
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream file = File.Open(Application.persistentDataPath + "/gamerData.dat", FileMode.Open);
+            GamerData data = (GamerData)bf.Deserialize(file);
+            
+            GamerModel model = new GamerModel(data.coinBalance, data.gemBalance, data.level);
+            
+            file.Close();
+
+            return model;
+            Debug.Log("Player data is loaded!");
+        }else
+        {
+            return new GamerModel();
+            Debug.Log("No player data to load!");
+        }
+
+    }
+    
+    [Serializable]
+    public class GamerData
+    {
+        public int coinBalance;
+        public int gemBalance;
+        public int level;
     }
 }

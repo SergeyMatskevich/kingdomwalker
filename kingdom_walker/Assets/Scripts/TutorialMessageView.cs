@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEditor.UI;
 
 public class TutorialMessageView : MonoBehaviour
 {
@@ -26,10 +25,5 @@ public class TutorialMessageView : MonoBehaviour
         {
             rect.anchoredPosition = new Vector2(0F, (Screen.height/4 + 50F));
         }
-    }
-
-    public void DestroyObject()
-    {
-        Destroy(gameObject);
     }
 }

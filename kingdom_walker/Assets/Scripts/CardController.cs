@@ -28,7 +28,7 @@ public class CardController : MonoBehaviour
     public void InitCardsObjects(int lvl, PlayerModel player)
     {
         List<CardModel> cards = new List<CardModel>();
-
+        /*
         switch (lvl)
         {
             case 1:
@@ -146,9 +146,9 @@ public class CardController : MonoBehaviour
                 cards.Add(card117);
                 break;
         }
-
+    
         player.availableCards = cards;
-
+        */
     }
 
     public void SetCardsInDeck(PlayerModel player)

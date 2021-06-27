@@ -12,17 +12,9 @@ public class GameEventController : MonoBehaviour
 
     public GameObject currentMessage;
 
-    public GameObject currentArrow;
+    public List<GameObject> currentArrows;
+    
     public List<GameObject> currentTaps;
-
-    public void InstantiateArrow(Vector3 targetArrow)
-    {
-    }
-
-    public void InstantiateTap(Vector3 targetTap)
-    {
-        
-    }
 
 
     public void InstantiateMessage()
@@ -44,10 +36,17 @@ public class GameEventController : MonoBehaviour
                         {
                             if (tile.GetComponent<TileView>().model.tileType == TileType.RedTower)
                             {
-                                currentArrow = Instantiate(arrowPrefab, canvas, true);
+                                GameObject currentArrow = Instantiate(arrowPrefab, canvas, true);
+                                
+                                Vector3 position = Camera.main.WorldToScreenPoint(tile.transform.position);
+                                
+                                float x = tile.GetComponent<SpriteRenderer>().sprite.bounds.size.x;
+                                
                                 currentArrow.GetComponent<RectTransform>().localPosition =
-                                    new Vector3(tile.transform.position.x * 100F + 150F,
-                                        tile.transform.position.y * 100F);
+                                    new Vector3(position.x - Screen.width/2F + x*100F, 
+                                        position.y - Screen.height/2F);
+                                
+                                currentArrows.Add(currentArrow);
                             }
                         }
                     }
@@ -58,17 +57,21 @@ public class GameEventController : MonoBehaviour
                         {
                             if (avatar.GetComponent<AvatarView>().model.isPlayer != true)
                             {
-                                currentArrow = Instantiate(arrowPrefab, canvas, true);
+                                GameObject currentArrow = Instantiate(arrowPrefab, canvas, true);
+                                
+                                Vector3 position = Camera.main.WorldToScreenPoint(avatar.transform.position);
+                                
+                                //float x = avatar.GetComponent<SpriteRenderer>().sprite.bounds.size.x;
+                                
                                 currentArrow.GetComponent<RectTransform>().localPosition =
-                                    new Vector3(avatar.transform.position.x * 100F + 150F,
-                                    avatar.transform.position.y * 100F);
+                                    new Vector3(position.x - Screen.width/2F + 100F, 
+                                                position.y - Screen.height/2F);
+                                
+                                currentArrows.Add(currentArrow);
                             }
                         }
                     }
-                }
-
-                if (model.element == AdditionalElement.tap)
-                {
+                    
                     if (model.elementPlace == AdditionalElementPlace.moveTile)
                     {
                         currentTaps = new List<GameObject>();
@@ -77,34 +80,43 @@ public class GameEventController : MonoBehaviour
                         {
                             if (tile.GetComponent<TileView>().model.availableForMove)
                             {
-                                GameObject instance = Instantiate(tapPrefab, canvas,true);
-
-                                instance.GetComponent<RectTransform>().localPosition =
-                                    new Vector3(tile.transform.position.x * 100F, tile.transform.position.y * 100F);
+                                GameObject instance = Instantiate(arrowPrefab, canvas,true);
                                 
-                                currentTaps.Add(instance);
+                                Vector3 position = Camera.main.WorldToScreenPoint(tile.transform.position);
+
+                                float x = tile.GetComponent<SpriteRenderer>().sprite.bounds.size.x;
+
+                                instance.GetComponent<RectTransform>().localPosition = 
+                                    new Vector3(position.x - Screen.width/2F + x*100F, 
+                                                position.y - Screen.height/2F);
+
+                                currentArrows.Add(instance);
                             }
                         }
                     }
-                    
                     if (model.elementPlace == AdditionalElementPlace.playerCard)
                     {
                         currentTaps = new List<GameObject>();
                         
+                        //Debug.Log("Before Cards");
                         foreach (GameObject card in GameController._gC._fieldC.playerCards)
                         {
+                            
                             if (card.GetComponent<CardView>().model != null)
                             {
-                                GameObject instance = Instantiate(tapPrefab, canvas,true);
+                                GameObject instance = Instantiate(arrowPrefab, canvas,true);
+
+                                Vector3 position = Camera.main.WorldToScreenPoint(card.transform.position);
+
+                                instance.GetComponent<RectTransform>().localPosition = new Vector3(position.x - Screen.width/2F + 100F, 
+                                    position.y - Screen.height/2F);
                                 
-                                instance.GetComponent<RectTransform>().localPosition =
-                                    new Vector3(card.transform.position.x * 100F, card.transform.position.y * 100F);
-                                
-                                currentTaps.Add(instance);
+                                currentArrows.Add(instance);
                             }
                         }
+                        //Debug.Log("After Cards");
+                        
                     }
-                    
                 }
             }
         }
@@ -114,14 +126,17 @@ public class GameEventController : MonoBehaviour
     {
         if (currentMessage)
         {
-            currentMessage.GetComponent<TutorialMessageView>().DestroyObject();
+            Destroy(currentMessage);
             currentMessage = null;
-            Destroy(currentArrow);
+            foreach (GameObject arrow in currentArrows)
+            {
+                Destroy(arrow);
+            }
+            currentArrows.Clear();
             foreach (GameObject tap in currentTaps)
             {
                 Destroy(tap);
             }
-            currentArrow = null;
             currentTaps.Clear();
         } 
     }

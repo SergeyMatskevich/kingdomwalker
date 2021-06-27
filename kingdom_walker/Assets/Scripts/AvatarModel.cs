@@ -85,5 +85,11 @@ public class AvatarModel
 
         return result;
     }
-    
+
+    public void MoveAvatar(TileModel tile)
+    {
+        previousPosition = position;
+        position = tile;
+    }
+
 }

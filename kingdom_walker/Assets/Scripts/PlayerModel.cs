@@ -11,9 +11,11 @@ public class PlayerModel
     public CardModel activeCard;
     public List<CardModel> availableCards;
     public int deckCapacity;
+    public GamerModel gamer;
     
 
-    public PlayerModel(bool IsPlayer, TileModel startTile,  List<CardModel> Deck = null, int DeckCapacity = 0)
+    public PlayerModel(bool IsPlayer, TileModel startTile,  List<CardModel> Deck = null, int DeckCapacity = 0, 
+                            GamerModel Gamer = null)
     {
         isPlayer = IsPlayer;
         avatar = new AvatarModel(startTile);
@@ -22,12 +24,20 @@ public class PlayerModel
         availableCards = new List<CardModel>();
         deckCapacity = DeckCapacity;
         isActive = false;
+        gamer = Gamer;
     }
 
-    public void SelectRandomCard()
+    public void RefreshDeck()
     {
-        int rand = Random.Range(0, deck.Count);
-
-        activeCard = deck[rand];
+        activeCard = null;
+        if (deck != null)
+        {
+            foreach (CardModel card in deck)
+            {
+                card.isPlayed = false;
+                card.MinusCooldown();
+            }    
+        }
     }
+
 }

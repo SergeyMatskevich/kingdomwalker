@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using UnityEngine;
 
 public class FieldController : MonoBehaviour
@@ -19,6 +18,9 @@ public class FieldController : MonoBehaviour
     public List<GameObject> enemyCards;
     public RectTransform playerDeckHolder;
     public List<GameObject> playerCards;
+    
+    public RectTransform resourcesHolder;
+    public GameObject resources;
 
     public void InitGameField(GameModel game)
     {
@@ -38,7 +40,21 @@ public class FieldController : MonoBehaviour
         }
         
         avatars.Clear();
+
+        foreach (GameObject card in enemyCards)
+        {
+            Destroy(card);
+        }
         
+        enemyCards.Clear();
+        
+        foreach (GameObject card in playerCards)
+        {
+            Destroy(card);
+        }
+        
+        playerCards.Clear();
+
         foreach (var tile in game._map._tiles)
         {
             GameObject instance = UnityEngine.Object.Instantiate(tilePrefab, new Vector3(tile.x , tile.y , 0f), Quaternion.identity);
@@ -52,9 +68,7 @@ public class FieldController : MonoBehaviour
         
         foreach (var player in game._players)
         {
-            //Debug.Log(player.avatar.position.x);
-            //Debug.Log(player.avatar.position.y);
-            
+
             GameObject instancePlayer = Instantiate(avatarPrefab, new Vector3(player.avatar.position.x, player.avatar.position.y, 0F), Quaternion.identity);
             instancePlayer.transform.SetParent(avatarsHolder);
             instancePlayer.GetComponent<AvatarView>().model = player;
@@ -62,7 +76,6 @@ public class FieldController : MonoBehaviour
             instancePlayer.GetComponent<AvatarView>().UpdatePlayerAnimation();
             instancePlayer.transform.localScale = avatarsHolder.transform.localScale;
             instancePlayer.transform.position = new Vector3((float)player.avatar.position.x, (float)player.avatar.position.y);
-            //instancePlayer.transform.position = new Vector3(0F, 0F);
             avatars.Add(instancePlayer);
             
             InitPlayerDeck(player);
@@ -74,14 +87,23 @@ public class FieldController : MonoBehaviour
         tilesHolder.localScale = new Vector3(scale, scale);
         tilesHolder.position = new Vector3(xPosition, yPosition);
         
+        Vector3 point = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width,Screen.height,0F));
+
+        float final = (point.x * 2);
+
+        resourcesHolder.position = new Vector3(0, yPosition - 1.5F);
+        resourcesHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(final/2, 1F);
+        Debug.Log(game.GetPlayer().gamer);
+        resources.GetComponent<ResourceView>().SetupResource(game.GetPlayer().gamer);
+            
         if (GameController._gC._game.GetActivePlayer().isPlayer)
         {
             GameController._gC._gEC.InstantiateMessage();
         }
         else
         {
-            GameController._gC._game.GetActivePlayer().SelectRandomCard();
-            GameController._gC.InvokeCard();
+            //GameController._gC._game.GetActivePlayer().SelectCard();
+            //GameController._gC.InvokeCard();
             Invoke("InvokeEnemyMoveAnimation", 0.5F);
             Invoke("SetNextTurn", 1F);
                 
@@ -91,6 +113,8 @@ public class FieldController : MonoBehaviour
 
     public void InitPlayerDeck(PlayerModel player)
     {
+        
+        
         if (player.deck != null)
         {
             if (player.deck.Count > 0)
@@ -181,35 +205,4 @@ public class FieldController : MonoBehaviour
             return final;
         }
     }
-    
-    public void AvatarMove(TileModel tile)
-    {
-        Vector3 end = GetTileUI(tile).transform.position;
-
-        foreach (GameObject avatar in avatars)
-        {
-            if (avatar.GetComponent<AvatarView>().model == GameController._gC._game.GetActivePlayer())
-            {
-                avatar.GetComponent<AvatarView>().MoveAvatar(end, tile);
-            }
-        }
-    }
-    
-    
-    
-    public GameObject GetTileUI(TileModel tile)
-    {
-        foreach (GameObject tileUI in tiles)
-        {
-            if (tileUI.GetComponent<TileView>().model == tile)
-            {
-                return tileUI;
-            }
-        }
-
-        return null;
-    }
-    
-    
-
 }

@@ -128,7 +128,7 @@ public class MapController : MonoBehaviour
 
         foreach (TileModel tile in orderedList)
         {
-            Debug.Log(GameController._gC._game._turnNumber + " " + player.isPlayer + " " + tile.distance + " " + tile.x + " " + tile.y);
+            //Debug.Log(GameController._gC._game._turnNumber + " " + player.isPlayer + " " + tile.distance + " " + tile.x + " " + tile.y);
         }
 
         List<TileModel> resultList = new List<TileModel>();

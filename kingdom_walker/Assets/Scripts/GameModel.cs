@@ -28,34 +28,68 @@ public class GameModel
         {
             case 1:
                 _map = new MapModel(3, 3, 3, 1, 3, 2, 2, 0, 0);
-                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0)));
-                _tutorialMessageModels.Add(new TutorialMessageModel(0,"TAP SHAKING TILE TO MOVE!",ScreenLocation.Bottom, AdditionalElement.tap,AdditionalElementPlace.moveTile));
-                _tutorialMessageModels.Add(new TutorialMessageModel(1,"GOOD! YOU NEED TO REACH RED CASTLE TO GET REWARD!",ScreenLocation.Top, AdditionalElement.arrow,AdditionalElementPlace.redCastleTile));
-                _winReward.items.Add(new RewardItemModel(RewardItemType.Silver, 100));
-                _winReward.items.Add(new RewardItemModel(RewardItemType.Gold, 10));
+                _players.Add(new PlayerModel(true,GetTilePerCoordinates(0,0),null,0,GameController._gC.gamer));
+                //_players.Add(new PlayerModel(true, GetTilePerCoordinates(0, 0), null, 0, GameController._gC.gamer));
+                _tutorialMessageModels.Add(new TutorialMessageModel(0,"TAP SHAKING TILE TO MOVE!",ScreenLocation.Bottom, AdditionalElement.arrow,AdditionalElementPlace.moveTile));
+                _tutorialMessageModels.Add(new TutorialMessageModel(1,"GOOD! YOU NEED TO REACH <color=#FF0000>RED CASTLE</color> TO GET REWARD!",ScreenLocation.Top, AdditionalElement.arrow,AdditionalElementPlace.redCastleTile));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
                 break;
             case 2:
                 _map = new MapModel(4, 3, 0, 0, 10, 2, 2, 0, 0);
                 List<CardModel> playerDeck2 = new List<CardModel>();
-                playerDeck2.Add(new CardModel("Sword",new DamageCardAction(5),ConditionType.Any,CoolDown:0,ConditionType.Any));
+                playerDeck2.Add(new CardModel("Sword",new DamageCardAction(5,0),ConditionType.Any,ConditionType.Any));
                 List<CardModel> enemyDeck2  = new List<CardModel>();
                 enemyDeck2.Add(new CardModel("PlainsRook",new MoveEffectCardAction(MoveType.CabCarl),ConditionType.Any));
-                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeck2,2));
+                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeck2,1,GameController._gC.gamer));
                 _players.Add(new PlayerModel(false, GetTilePerCoordinates(_map._columns - 1,_map._rows - 1 ),enemyDeck2,1));
-                _tutorialMessageModels.Add(new TutorialMessageModel(0,"YOU ARE NOT ALONE! ENEMY WANTS TO CAPTURE YOUR CASTLE!",ScreenLocation.Bottom, AdditionalElement.arrow, AdditionalElementPlace.enemy));
-                _tutorialMessageModels.Add(new TutorialMessageModel(2,"TRY TO PLAY CARDS BEFORE MAKE MOVE",ScreenLocation.Top, AdditionalElement.tap, AdditionalElementPlace.playerCard));
-                _winReward.items.Add(new RewardItemModel(RewardItemType.Silver, 100));
-                _winReward.items.Add(new RewardItemModel(RewardItemType.Gold, 10));
+                _tutorialMessageModels.Add(new TutorialMessageModel(0,"YOU ARE NOT ALONE! <color=#FF0000>ENEMY</color> WANTS TO CAPTURE <color=#0000FF>YOUR CASTLE</color>!",ScreenLocation.Bottom, AdditionalElement.arrow, AdditionalElementPlace.enemy));
+                _tutorialMessageModels.Add(new TutorialMessageModel(2,"TRY TO PLAY CARDS BEFORE MAKE MOVE",ScreenLocation.Top, AdditionalElement.arrow, AdditionalElementPlace.playerCard));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
+                _loseReward.items.Add(new RewardItemModel(RewardItemType.Coin, 5 ));
                 break;
+            case 3:
+                _map = new MapModel(5, 5, 15, 3, 3, 3, 3, 0, 0);
+                List<CardModel> playerDeck3 = new List<CardModel>();
+                playerDeck3.Add(new CardModel("Sword",new DamageCardAction(4,6),ConditionType.Any,ConditionType.Any,true,10,0,new DamageCardAction(6,6)));
+                List<CardModel> enemyDeck3 = new List<CardModel>();
+                //enemyDeck3.Add(new CardModel("PlainsRook",new MoveEffectCardAction(MoveType.CabCarl,5),ConditionType.Any,ConditionType.Any));
+                enemyDeck3.Add(new CardModel("PlainsBishop",new MoveEffectCardAction(MoveType.Bishop,2),ConditionType.Any));
+                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeck3,1,GameController._gC.gamer));
+                _players.Add(new PlayerModel(false, GetTilePerCoordinates(_map._columns - 1,_map._rows - 1 ),enemyDeck3,1));
+                _tutorialMessageModels.Add(new TutorialMessageModel(0,"Cards might have <color=#00A6B0>cooldown</color> time! After being played, your card will not be available for <color=#00A6B0>6</color> turns! Play it and make move!",ScreenLocation.Bottom, AdditionalElement.arrow, AdditionalElementPlace.playerCard));
+                _tutorialMessageModels.Add(new TutorialMessageModel(2,"Luckily we can unfreeze card. Press <color=#B600FF>Unfreeze button</color> and keep attack enemy!",ScreenLocation.Bottom, AdditionalElement.arrow, AdditionalElementPlace.playerCard));
+                _tutorialMessageModels.Add(new TutorialMessageModel(4,"Keep unfreezing card to win!",ScreenLocation.Top, AdditionalElement.arrow, AdditionalElementPlace.playerCard));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
+                _loseReward.items.Add(new RewardItemModel(RewardItemType.Coin, 5 ));
+                break;
+            //case 4:
+            //    _map = new MapModel(6, 6, 12, 12, 10, 4, 5, 2, 1);
+            //    break;
             default:
-                _map = new MapModel(5, 5, 7, 8, 9, 4, 4, 0, 0);
-                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0)));
-                _players.Add(new PlayerModel(false, GetTilePerCoordinates(4,4)));
+                _map = new MapModel(6, 6, 11, 11, 12, Random.Range(4,5), Random.Range(4,5), Random.Range(0,1), Random.Range(0,1));
+                List<CardModel> playerDeckD = new List<CardModel>();
+                playerDeckD.Add(new CardModel("Sword",new DamageCardAction(4,2),ConditionType.EnemyOnTileTypeWater,ConditionType.Any));
+                List<CardModel> enemyDeckD  = new List<CardModel>();
+                enemyDeckD.Add(new CardModel("PlainsRook",new MoveEffectCardAction(MoveType.HorseTrainer,2),ConditionType.Any));
+                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeckD,1,GameController._gC.gamer));
+                _players.Add(new PlayerModel(false, GetTilePerCoordinates(_map._columns - 1,_map._rows - 1 ),enemyDeckD,1));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
+                _loseReward.items.Add(new RewardItemModel(RewardItemType.Coin, 5 ));
                 break;
         }
         
         DefineActivePlayer();
         GetActivePlayer().avatar.SetAvatarMoves(_players,_map._tiles);
+    }
+
+    public void RewardPlayer()
+    {
+        GameController._gC.gamer.coins += _winReward.GetCoins();
+        GameController._gC.gamer.gems += _winReward.GetGems();
     }
 
     public TileModel GetTilePerCoordinates(int x, int y)
@@ -95,20 +129,20 @@ public class GameModel
         }
         else
         {
-            //Debug.Log("TurnNumber > 0");
+            
             if (_players.Count > 1)
             {
-                //Debug.Log("Players Count > 1");
+                
                 if (GetActivePlayer().isPlayer)
                 {
-                    //Debug.Log("Player is active player before");
+                    
                     foreach (PlayerModel player in _players)
                     {
                         if (player.isPlayer)
                         {
-                            //Debug.Log("Found Player in players.");
+                            
                             player.isActive = false;
-                            //Debug.Log("Make Player in players inactive");
+                            
                         }
                         else
                         {
@@ -118,7 +152,6 @@ public class GameModel
                 }
                 else
                 {
-                    //Debug.Log("Comp is active player");
                     foreach (PlayerModel player in _players)
                     {
                         if (player.isPlayer)
@@ -133,6 +166,10 @@ public class GameModel
                 }
             }
         }
+        
+        //ResetAvatar???
+        GetActivePlayer().avatar.moveType = MoveType.SingleMove;
+        GetActivePlayer().RefreshDeck();
     }
     
     public PlayerModel OppositePlayer()
@@ -159,5 +196,86 @@ public class GameModel
         }
 
         return null;
+    }
+
+    public PlayerModel GetPlayer(bool isPlayer)
+    {
+        foreach (PlayerModel player in _players)
+        {
+            if (player.isPlayer == isPlayer)
+            {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public PlayerModel GetWinner()
+    {
+        
+        if (_players.Count == 1)
+        {
+            if (GetActivePlayer().avatar.position.tileType == TileType.RedTower)
+            {
+                return GetActivePlayer();
+            }
+        }
+        else
+        {
+            PlayerModel player = GetPlayer(true);
+            PlayerModel enemy = GetPlayer(false);
+
+            if (player.avatar.currentHP <= 0)
+            {
+                return enemy;
+            }
+
+            if (enemy.avatar.currentHP <= 0)
+            {
+                return player;
+            }
+            
+            if (enemy.avatar.position.tileType == TileType.BlueTower)
+            {
+                return enemy;
+            }
+            
+            if (player.avatar.position.tileType == TileType.RedTower)
+            {
+                return player;
+            }
+        }
+
+        return null;
+    }
+    
+    public void SelectCardForAI()
+    {
+        List<CardModel> availableCards = new List<CardModel>();
+
+        PlayerModel ai = GetPlayer(false);
+        
+        foreach (CardModel card in ai.deck)
+        {
+            if (card.action.coolDownLeft == 0)
+            {
+                availableCards.Add(card);
+            }
+        }
+
+        if (availableCards.Count > 0)
+        {
+            int rand = Random.Range(0, availableCards.Count);
+            Debug.Log("Card is randomly selected");
+            ai.activeCard = availableCards[rand];    
+        }
+        else
+        {
+            Debug.Log("AI Card is null");
+            ai.activeCard = null;
+        }
+
+
+
     }
 }

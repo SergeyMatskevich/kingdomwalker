@@ -55,9 +55,9 @@ public class TileView : MonoBehaviour
         if (model.availableForMove)
         {
             GameController._gC.ClearTiles();
-            GameController._gC._fieldC.AvatarMove(model);
+            GameController._gC.AvatarMove(model);
             GameController._gC.ResetAvatar();
-            GameController._gC.SetNextTurn();
+            //GameController._gC.SetNextTurn();
 
         }
     }

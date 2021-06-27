@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,8 +30,15 @@ public class DestroyAfterPlay : MonoBehaviour
                     break;
             }
         }
+        
+        Invoke("DestroyAnimation",length);
+        
+    }
 
-        Destroy(gameObject, length);
+    public void DestroyAnimation()
+    { 
+        Destroy(gameObject);
+        GameController._gC.CheckWinnerCard();
     }
 
     // Update is called once per frame

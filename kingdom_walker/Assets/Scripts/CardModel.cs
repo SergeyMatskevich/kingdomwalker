@@ -7,18 +7,30 @@ public class CardModel
     public string name;
     public bool canPlay;
     public CardAction action;
+    public CardAction upgradedAction;
+    public CardAction activeAction;
     public ConditionType conditionForActionByEnemy;
     public ConditionType conditionForActionByPlayer;
-    public int coolDown;
-    public int coolDownLeft;
+    public bool isUpgradable;
+    public bool isUpgraded;
+    public bool isPlayed;
+    public int upgradeCost;
+    public int cooldownRemoveCost;
 
-    public CardModel(string Name, CardAction Action, ConditionType ByEnemy = ConditionType.Any, int CoolDown = 0, ConditionType ByPlayer = ConditionType.Any )
+    public CardModel(string Name, CardAction Action, ConditionType ByEnemy = ConditionType.Any, 
+                        ConditionType ByPlayer = ConditionType.Any, bool IsUpgradable = false, int UpgradeCost = 0, 
+                        int CooldownRemoveCost = 0, CardAction UpgradedAction = null, bool IsPlayed = false)
     {
         name = Name;
         action = Action;
         conditionForActionByEnemy = ByEnemy;
         conditionForActionByPlayer = ByPlayer;
-        coolDown = CoolDown;
+        isUpgradable = IsUpgradable;
+        isPlayed = IsPlayed;
+        upgradeCost = UpgradeCost;
+        cooldownRemoveCost = CooldownRemoveCost;
+        upgradedAction = UpgradedAction;
+        
     }
 
     public bool CardFromPlayerDeck(PlayerModel player)
@@ -31,6 +43,47 @@ public class CardModel
             }
         }
         return false;
+    }
+
+    public void InvokeAction(PlayerModel player, PlayerModel target)
+    {
+        player.activeCard = this;
+        action.Invoke(player,target);
+        isPlayed = true;
+    }
+
+    public void Unfreeze()
+    {
+        action.coolDownLeft = 0;
+    }
+
+    public void MinusCooldown()
+    {
+        if (CardIsInCooldown())
+        {
+            action.coolDownLeft -= 1;
+        }
+        
+        if (action.coolDownLeft > 0)
+        {
+            GameController._gC.OnCardInCooldown?.Invoke(this);    
+        }
+        else
+        {
+            GameController._gC.OnCardRefreshed?.Invoke(this);
+        }
+    }
+
+    public bool CardIsInCooldown()
+    {
+        if (action.coolDownLeft > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public bool CheckCondition(PlayerModel owner, PlayerModel enemy)

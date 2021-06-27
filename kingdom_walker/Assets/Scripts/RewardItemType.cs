@@ -4,6 +4,6 @@ using UnityEngine;
 
 public enum RewardItemType
 {
-   Silver,
-   Gold
+   Coin,
+   Gem
 }
