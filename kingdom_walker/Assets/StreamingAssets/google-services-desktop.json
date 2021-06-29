@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "725521320292",
+    "project_id": "kingdom-walker",
+    "storage_bucket": "kingdom-walker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725521320292:android:14b2163b900c69bdd8d271",
+        "android_client_info": {
+          "package_name": "com.RebelusGames.kingdom_walker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "725521320292-th9l4huc3h0n2ftec2h7njm78i23oo9f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDc908F4ie50pZmBP0LbNNgKX6VXiiidLk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725521320292-th9l4huc3h0n2ftec2h7njm78i23oo9f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      },
+      "admob_app_id": "ca-app-pub-1304526413092185~4524428475"
+    }
+  ],
+  "configuration_version": "1"
+}

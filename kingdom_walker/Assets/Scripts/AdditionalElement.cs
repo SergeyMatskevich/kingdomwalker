@@ -5,5 +5,6 @@ using UnityEngine;
 public enum AdditionalElement
 {
     tap,
-    arrow
+    arrow,
+    none
 }

@@ -65,15 +65,32 @@ public class GameModel
                 _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
                 _loseReward.items.Add(new RewardItemModel(RewardItemType.Coin, 5 ));
                 break;
-            //case 4:
-            //    _map = new MapModel(6, 6, 12, 12, 10, 4, 5, 2, 1);
-            //    break;
+            case 4:
+                // plain + forest
+                // action card + move card
+                _map = new MapModel(5, 6, 16, 10, 2, 5, 4, 0, 1);
+                List<CardModel> playerDeck4 = new List<CardModel>();
+                playerDeck4.Add(new CardModel("SwordWater",new DamageCardAction(5,3),ConditionType.EnemyOnTileTypeWater));
+                playerDeck4.Add(new CardModel("Horse",new MoveEffectCardAction(MoveType.HorseTrainer,3)));
+                List<CardModel> enemyDeck4 = new List<CardModel>();
+                enemyDeck4.Add(new CardModel("SwordForest",new DamageCardAction(5,3),ConditionType.EnemyOnTileTypeForest));
+                enemyDeck4.Add(new CardModel("Horse",new MoveEffectCardAction(MoveType.HorseTrainer,3)));
+                _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeck4,1,GameController._gC.gamer));
+                _players.Add(new PlayerModel(false, GetTilePerCoordinates(_map._columns - 1,_map._rows - 1 ),enemyDeck4,1));
+                _tutorialMessageModels.Add(new TutorialMessageModel(0,"You can play one card per turn",ScreenLocation.Bottom, AdditionalElement.arrow, AdditionalElementPlace.playerCard));
+                _tutorialMessageModels.Add(new TutorialMessageModel(2,"Watch out the <color=#00FF00>forest</color> tiles!",ScreenLocation.Top));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
+                _winReward.items.Add(new RewardItemModel(RewardItemType.Gem, 3));
+                _loseReward.items.Add(new RewardItemModel(RewardItemType.Coin, 5 ));
+                break;
             default:
-                _map = new MapModel(6, 6, 11, 11, 12, Random.Range(4,5), Random.Range(4,5), Random.Range(0,1), Random.Range(0,1));
+                _map = new MapModel(5, 6, 16, 10, 2, 5, 4, 0, 1);
                 List<CardModel> playerDeckD = new List<CardModel>();
-                playerDeckD.Add(new CardModel("Sword",new DamageCardAction(4,2),ConditionType.EnemyOnTileTypeWater,ConditionType.Any));
-                List<CardModel> enemyDeckD  = new List<CardModel>();
-                enemyDeckD.Add(new CardModel("PlainsRook",new MoveEffectCardAction(MoveType.HorseTrainer,2),ConditionType.Any));
+                playerDeckD.Add(new CardModel("SwordWater",new DamageCardAction(5,3),ConditionType.EnemyOnTileTypeWater, ConditionType.Any,false,0,3));
+                playerDeckD.Add(new CardModel("Horse",new MoveEffectCardAction(MoveType.HorseTrainer,3),ConditionType.Any,ConditionType.Any,false,0,3));
+                List<CardModel> enemyDeckD = new List<CardModel>();
+                enemyDeckD.Add(new CardModel("SwordForest",new DamageCardAction(5,3),ConditionType.EnemyOnTileTypeForest));
+                enemyDeckD.Add(new CardModel("Horse",new MoveEffectCardAction(MoveType.HorseTrainer,3)));
                 _players.Add(new PlayerModel(true, GetTilePerCoordinates(0,0),playerDeckD,1,GameController._gC.gamer));
                 _players.Add(new PlayerModel(false, GetTilePerCoordinates(_map._columns - 1,_map._rows - 1 ),enemyDeckD,1));
                 _winReward.items.Add(new RewardItemModel(RewardItemType.Coin, 30));
@@ -86,10 +103,18 @@ public class GameModel
         GetActivePlayer().avatar.SetAvatarMoves(_players,_map._tiles);
     }
 
-    public void RewardPlayer()
+    public void RewardPlayer(bool win)
     {
-        GameController._gC.gamer.coins += _winReward.GetCoins();
-        GameController._gC.gamer.gems += _winReward.GetGems();
+        if (win)
+        {
+            GameController._gC.gamer.coins += _winReward.GetCoins();
+            GameController._gC.gamer.gems += _winReward.GetGems();    
+        }
+        else
+        {
+            GameController._gC.gamer.coins += _loseReward.GetCoins();
+            GameController._gC.gamer.gems += _loseReward.GetGems();  
+        }
     }
 
     public TileModel GetTilePerCoordinates(int x, int y)
@@ -267,7 +292,7 @@ public class GameModel
         {
             int rand = Random.Range(0, availableCards.Count);
             Debug.Log("Card is randomly selected");
-            ai.activeCard = availableCards[rand];    
+            ai.activeCard = availableCards[rand];
         }
         else
         {

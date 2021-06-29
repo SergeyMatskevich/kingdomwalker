@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id,@string/default_web_client_id" xmlns:tools="http://schemas.android.com/tools">
+  <string name="gcm_defaultSenderId" translatable="false">725521320292</string>
+  <string name="google_storage_bucket" translatable="false">kingdom-walker.appspot.com</string>
+  <string name="project_id" translatable="false">kingdom-walker</string>
+  <string name="google_api_key" translatable="false">AIzaSyDc908F4ie50pZmBP0LbNNgKX6VXiiidLk</string>
+  <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDc908F4ie50pZmBP0LbNNgKX6VXiiidLk</string>
+  <string name="google_app_id" translatable="false">1:725521320292:android:14b2163b900c69bdd8d271</string>
+  <string name="default_web_client_id" translatable="false">725521320292-th9l4huc3h0n2ftec2h7njm78i23oo9f.apps.googleusercontent.com</string>
+</resources>

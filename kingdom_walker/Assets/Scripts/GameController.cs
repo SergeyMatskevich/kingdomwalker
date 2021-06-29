@@ -5,6 +5,7 @@ using UnityEngine.Events;
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Firebase.Analytics;
 
 public class GameController : MonoBehaviour
 {
@@ -58,23 +59,31 @@ public class GameController : MonoBehaviour
     public void StartNewLevel()
     {
         //_aC.ShowInterstitial();
+        Firebase.Analytics.FirebaseAnalytics.LogEvent(Firebase.Analytics.FirebaseAnalytics.EventLevelEnd, 
+            new Parameter(FirebaseAnalytics.ParameterLevel, gamer.level));
         gamer.level += 1;
-        _game.RewardPlayer();
+        _game.RewardPlayer(true);
+        OnResourceUpdate?.Invoke();
         Save();
         InitLevel();
     }
-    
+
+    public void RewardLose()
+    {
+        _game.RewardPlayer(false);
+        OnResourceUpdate?.Invoke();
+        Save();
+    }
+
     public void InitLevel()
     {
         _rC.rewardPanel.SetActive(false);
-        
         _game = new GameModel(gamer.level);
         _fieldC.InitGameField(_game);
-        
-        string id = SystemInfo.deviceUniqueIdentifier;
-        string time = System.DateTime.Now.ToString();
 
-        _fC.SaveStatistics(id,time,level.ToString(),"lvlstart",_game._turnNumber.ToString(), Time.time.ToString());
+        Firebase.Analytics.FirebaseAnalytics.LogEvent(Firebase.Analytics.FirebaseAnalytics.EventLevelStart, 
+            new Parameter(FirebaseAnalytics.ParameterLevel, gamer.level));
+        
     }
     
     void OnApplicationQuit()
@@ -82,8 +91,7 @@ public class GameController : MonoBehaviour
         Debug.Log("Application ending after " + Time.time + " seconds");
         string id = SystemInfo.deviceUniqueIdentifier;
         string time = System.DateTime.Now.ToString();
-
-        _fC.SaveStatistics(id, time, level.ToString(), "gamequit", _game._turnNumber.ToString(), Time.time.ToString());
+        
     }
     
     public void SetActiveAvatarMoves()
@@ -155,62 +163,37 @@ public class GameController : MonoBehaviour
     IEnumerator ComposeEnemyMove()
     {
         Debug.Log("Active player is player" + _game.GetActivePlayer().isPlayer);
+        PlayerModel target = _game.OppositePlayer();
+        PlayerModel ai = _game.GetActivePlayer();
+        
         _game.SelectCardForAI();
-        if (_game.GetActivePlayer().activeCard != null)
+        if (ai.activeCard != null)
         {
-            OnCardSelected?.Invoke();
+            if (ai.activeCard.CheckCondition(ai, target))
+            {
+                ai.activeCard.InvokeAction(ai, target);
+                OnCardSelected?.Invoke();
+                if (ai.activeCard.action.ActionType == ActionType.DealDamage)
+                {
+                    Instantiate(attackAnimation, GetAvatarByModel(target).transform);
+                }
+                OnAvatarChangeHP?.Invoke();
+            }
 
             yield return new WaitForSeconds(1F);
-
-            InvokeCard();    
         }
         
         SetActiveAvatarMoves();
         
         AvatarMove(_mC.SetTileForAI(_game._map, _game.GetActivePlayer()));
-        
-        //ResetAvatar();
-        
+
         ClearTiles();
         
         // define whether to play card
         // if so -> define what card to play
         // compose sequence of actions : card invoke on ui -> select where to make move -> 
     }
-
-    public GameObject GetAvatarByModel(PlayerModel model)
-    {
-        foreach (GameObject avatar in _fieldC.avatars)
-        {
-            if (avatar.GetComponent<AvatarView>().model == model)
-            {
-                return avatar;
-            }
-        }
-
-        return null;
-    }
-
-    public void UnfreezeCard(CardView view)
-    {
-        if (view.model.cooldownRemoveCost <= gamer.gems)
-        {
-            view.model.Unfreeze();
-            gamer.gems -= view.model.cooldownRemoveCost;
-            OnCardOutCooldown?.Invoke(view.model);
-            OnResourceUpdate?.Invoke();
-        }
-        else
-        {
-            Debug.Log("Not enough gems");
-        }
-
-        //check the player balance is enough
-        //update card cooldown
-        //refresh card back
-    }
-
-
+    
     public void SelectCard(CardView view)
     {
         PlayerModel target = _game.OppositePlayer();
@@ -257,12 +240,7 @@ public class GameController : MonoBehaviour
         OnAvatarChangeHP?.Invoke();
    
     }
-
-    public void ClearTiles()
-    {
-        _game._map.ClearTilesForMove();
-    }
-
+    
     public void InvokeCard()
     {
         PlayerModel target = _game.OppositePlayer();
@@ -270,11 +248,63 @@ public class GameController : MonoBehaviour
         if (_game.GetActivePlayer().activeCard != null && _game.GetActivePlayer().activeCard.CheckCondition(_game.GetActivePlayer(), target))
         {
             _game.GetActivePlayer().activeCard.action.Invoke(_game.GetActivePlayer(), target);
+            
+            
             //_activePlayer.activeCard.onTable = false;
         }
         //AnimateCardAction(player, enemy);
     }
+
+    public GameObject GetAvatarByModel(PlayerModel model)
+    {
+        foreach (GameObject avatar in _fieldC.avatars)
+        {
+            if (avatar.GetComponent<AvatarView>().model == model)
+            {
+                return avatar;
+            }
+        }
+
+        return null;
+    }
+
+    public void UnfreezeCard(CardView view)
+    {
+        if (view.model.cooldownRemoveCost <= gamer.gems)
+        {
+            view.model.Unfreeze();
+            gamer.gems -= view.model.cooldownRemoveCost;
+            OnCardOutCooldown?.Invoke(view.model);
+            OnResourceUpdate?.Invoke();
+            
+            FirebaseAnalytics.LogEvent("UnfreezeCard", 
+                    new Parameter("Success","true"), 
+                                    new Parameter("Cost", view.model.cooldownRemoveCost),
+                                    new Parameter(FirebaseAnalytics.ParameterLevel,gamer.level));
+        }
+        else
+        {
+            Debug.Log("Not enough gems");
+            
+            FirebaseAnalytics.LogEvent("UnfreezeCard", 
+                    new Parameter("Success","false"), 
+                                new Parameter("Cost", view.model.cooldownRemoveCost),
+                                new Parameter(FirebaseAnalytics.ParameterLevel,gamer.level));
+        }
+
+        //check the player balance is enough
+        //update card cooldown
+        //refresh card back
+    }
+
+
     
+
+    public void ClearTiles()
+    {
+        _game._map.ClearTilesForMove();
+    }
+
     public void ResetAvatar()
     {
         //_game.GetActivePlayer().avatar.moveType = MoveType.SingleMove;
@@ -339,13 +369,14 @@ public class GameController : MonoBehaviour
             GamerModel model = new GamerModel(data.coinBalance, data.gemBalance, data.level);
             
             file.Close();
-
+            Debug.Log("Player data is loaded!");    
             return model;
-            Debug.Log("Player data is loaded!");
+            
         }else
         {
-            return new GamerModel();
             Debug.Log("No player data to load!");
+            return new GamerModel();
+            
         }
 
     }

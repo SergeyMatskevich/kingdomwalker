@@ -12,6 +12,7 @@ public class PlayerModel
     public List<CardModel> availableCards;
     public int deckCapacity;
     public GamerModel gamer;
+    public List<CardPlayModel> cardPlays;
     
 
     public PlayerModel(bool IsPlayer, TileModel startTile,  List<CardModel> Deck = null, int DeckCapacity = 0, 
@@ -24,7 +25,9 @@ public class PlayerModel
         availableCards = new List<CardModel>();
         deckCapacity = DeckCapacity;
         isActive = false;
-        gamer = Gamer;
+        gamer = Gamer; 
+        cardPlays = new List<CardPlayModel>();
+        cardPlays.Add(new CardPlayModel());
     }
 
     public void RefreshDeck()

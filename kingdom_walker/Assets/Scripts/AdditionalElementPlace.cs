@@ -7,5 +7,6 @@ public enum AdditionalElementPlace
     enemy,
     playerCard,
     moveTile,
-    redCastleTile
+    redCastleTile,
+    none
 }

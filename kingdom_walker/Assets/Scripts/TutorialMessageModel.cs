@@ -10,7 +10,7 @@ public class TutorialMessageModel
     public AdditionalElement element;
     public AdditionalElementPlace elementPlace;
 
-    public TutorialMessageModel(int turn, string message, ScreenLocation loc, AdditionalElement el, AdditionalElementPlace place)
+    public TutorialMessageModel(int turn, string message, ScreenLocation loc, AdditionalElement el = AdditionalElement.none, AdditionalElementPlace place = AdditionalElementPlace.none)
     {
         turnAppear = turn;
         messageToShow = message;
